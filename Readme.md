@@ -4,6 +4,9 @@
 
 This project converts Laaravel blade templates from Bulma CSS to Tailwind CSS using calls to a large language model (LLM) API. It simplifies the process of modernizing Bulma CSS-based templates to Tailwind CSS while maintaining functionality and readability.
 
+It can optionally add in A11Y html/css and attempt to add responsive tailwind/html into the template.
+
+
 ## Repository
 
 - GitHub Repository: [ohnotnow/bulma2tailwind](https://github.com/ohnotnow/bulma2tailwind)
@@ -48,6 +51,15 @@ To run the code and convert Bulma CSS-based templates to Tailwind CSS, use the f
    ```
 
 This will start the conversion process, scanning for Laravel Blade templates with Bulma CSS and converting them to Tailwind CSS.
+
+## Alternate options to run
+```bash
+export OPENAI_API_KEY=sk-....
+python main.py --file=/path/to/single/template.blade.php
+python main.py --dir=/path/to/template/base/dir/
+# optionally add a11y and responsive features - can be combined with other flags or omitted
+python main.py --a11y --responsive
+```
 
 ## License
 
