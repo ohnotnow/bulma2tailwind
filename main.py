@@ -2,18 +2,21 @@ import os
 import datetime
 import argparse
 import concurrent.futures
-from gepetto import gpt, ollama, groq
+from gepetto import gpt, ollama, groq, mistral
 from prompts import system_prompts
 from yaspin import yaspin
 
 
 
-def talk_to_openai(bot, messages):
-    return bot.chat(messages, model="gpt-3.5-turbo")
+def talk_to_openai(bot, messages, model="gpt-3.5-turbo"):
+    response = bot.chat(messages, model=model)
+    response.message = response.message.strip('```html').strip('```markdown').strip('```blade```').strip('```').strip()
+    return response
 
 def convert_template(filename, a11y=False, responsive=False):
     print(f"Converting {filename}...")
     bot = gpt.GPTModelSync()
+    # bot = mistral.MistralModelSync()
     with open(filename, "r") as file:
         template = file.read()
         total_cost = 0
