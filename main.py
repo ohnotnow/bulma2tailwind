@@ -15,20 +15,21 @@ def talk_to_openai(bot, messages, model="gpt-3.5-turbo"):
     response.message = re.sub(r'```', '', response.message).strip()
     return response
 
-def convert_template(filename, a11y=False, responsive=False):
+def convert_template(filename, a11y=False, responsive=False, css=False):
     print(f"Converting {filename}...")
     bot = gpt.GPTModelSync()
     # bot = mistral.MistralModelSync()
     with open(filename, "r") as file:
-        template = file.read()
+        updated_template = file.read()
         total_cost = 0
-        messages = [
-            {"role": "system", "content": system_prompts["bulma_to_tailwind"]},
-            {"role": "user", "content": f"Could you convert this BulmaCSS laravel blade template to use modern TailwindCSS?\n\n```{template}```"},
-        ]
-        response = talk_to_openai(bot, messages)
-        updated_template = response.message
-        total_cost += response.cost
+        if css:
+            messages = [
+                {"role": "system", "content": system_prompts["bulma_to_tailwind"]},
+                {"role": "user", "content": f"Could you convert this BulmaCSS laravel blade template to use modern TailwindCSS?\n\n```{template}```"},
+            ]
+            response = talk_to_openai(bot, messages)
+            updated_template = response.message
+            total_cost += response.cost
         if a11y:
             messages = [
                 {"role": "system", "content": system_prompts["a11y"]},
@@ -51,11 +52,11 @@ def convert_template(filename, a11y=False, responsive=False):
             file.write(updated_template)
         return f"tw/{filename}", total_cost
 
-def process_file(filename, a11y=False, responsive=False):
-    _, cost = convert_template(filename, a11y, responsive)
+def process_file(filename, a11y=False, responsive=False, css=False):
+    _, cost = convert_template(filename, a11y, responsive, css)
     return cost
 
-def main(file="", dir="", a11y=False, responsive=False):
+def main(file="", dir="", a11y=False, responsive=False, css=False):
     if not os.path.exists("tw"):
         os.makedirs("tw")
     total_cost = 0
@@ -86,8 +87,9 @@ if __name__ == "__main__":
     argp = argparse.ArgumentParser()
     argp.add_argument("--file", type=str, default="", help="A single file to convert")
     argp.add_argument("--dir", type=str, default="", help="The directory to convert")
+    argp.add_argument("--css", action="store_true", default=False, help="Convert CSS from Bulma to Tailwind")
     argp.add_argument("--a11y", action="store_true", default=False, help="Do accessibilty checks and code")
     argp.add_argument("--responsive", action="store_true", default=False, help="Do responsive checks and code")
     args = argp.parse_args()
 
-    main(file=args.file, dir=args.dir, a11y=args.a11y, responsive=args.responsive)
+    main(file=args.file, dir=args.dir, a11y=args.a11y, responsive=args.responsive, css=args.css)
