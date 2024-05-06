@@ -58,7 +58,7 @@ export OPENAI_API_KEY=sk-....
 python main.py --file=/path/to/single/template.blade.php
 python main.py --dir=/path/to/template/base/dir/
 # optionally add a11y and responsive features - can be combined with other flags or omitted
-python main.py --a11y --responsive
+python main.py --css --a11y --responsive
 ```
 
 ## License
