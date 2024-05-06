@@ -15,7 +15,7 @@ def talk_to_openai(bot, messages, model="gpt-3.5-turbo"):
     response.message = re.sub(r'```', '', response.message).strip()
     return response
 
-def convert_template(filename, a11y=False, responsive=False, css=False):
+def convert_template(filename, a11y=False, responsive=False, css=False, model="gpt-3.5-turbo"):
     print(f"Converting {filename}...")
     bot = gpt.GPTModelSync()
     # bot = mistral.MistralModelSync()
@@ -27,7 +27,7 @@ def convert_template(filename, a11y=False, responsive=False, css=False):
                 {"role": "system", "content": system_prompts["bulma_to_tailwind"]},
                 {"role": "user", "content": f"Could you convert this BulmaCSS laravel blade template to use modern TailwindCSS?\n\n```{template}```"},
             ]
-            response = talk_to_openai(bot, messages)
+            response = talk_to_openai(bot, messages, model=model)
             updated_template = response.message
             total_cost += response.cost
         if a11y:
@@ -35,7 +35,7 @@ def convert_template(filename, a11y=False, responsive=False, css=False):
                 {"role": "system", "content": system_prompts["a11y"]},
                 {"role": "user", "content": f"Could you update this laravel blade template to make it more a11y/accessible?\n\n```{updated_template}```"},
             ]
-            response = talk_to_openai(bot, messages)
+            response = talk_to_openai(bot, messages, model=model)
             updated_template = response.message
             total_cost += response.cost
         if responsive:
@@ -43,7 +43,7 @@ def convert_template(filename, a11y=False, responsive=False, css=False):
                 {"role": "system", "content": system_prompts["responsive"]},
                 {"role": "user", "content": f"Could you update this laravel blade template to make it more responsive?\n\n```{updated_template}```"},
             ]
-            response = talk_to_openai(bot, messages)
+            response = talk_to_openai(bot, messages, model=model)
             updated_template = response.message
             total_cost += response.cost
         # ensure all directories in the full fulename exist before writing it
@@ -52,11 +52,11 @@ def convert_template(filename, a11y=False, responsive=False, css=False):
             file.write(updated_template)
         return f"tw/{filename}", total_cost
 
-def process_file(filename, a11y=False, responsive=False, css=False):
-    _, cost = convert_template(filename, a11y, responsive, css)
+def process_file(filename, a11y=False, responsive=False, css=False, model="gpt-3.5-turbo"):
+    _, cost = convert_template(filename, a11y, responsive, css, model)
     return cost
 
-def main(file="", dir="", a11y=False, responsive=False, css=False):
+def main(file="", dir="", a11y=False, responsive=False, css=False, model="gpt-3.5-turbo"):
     if not os.path.exists("tw"):
         os.makedirs("tw")
     total_cost = 0
@@ -75,7 +75,7 @@ def main(file="", dir="", a11y=False, responsive=False, css=False):
                     file_list.append(full_path)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-        costs = executor.map(process_file, file_list, [a11y]*len(file_list), [responsive]*len(file_list))
+        costs = executor.map(process_file, file_list, [a11y]*len(file_list), [responsive]*len(file_list), [css]*len(file_list), [model]*len(file_list))
 
     total_cost = sum(costs)
     end_time = datetime.datetime.now()
@@ -87,9 +87,10 @@ if __name__ == "__main__":
     argp = argparse.ArgumentParser()
     argp.add_argument("--file", type=str, default="", help="A single file to convert")
     argp.add_argument("--dir", type=str, default="", help="The directory to convert")
+    argp.add_argument("--model", type=str, default="gpt-3.5-turbo", help="The OpenAI model to use")
     argp.add_argument("--css", action="store_true", default=False, help="Convert CSS from Bulma to Tailwind")
     argp.add_argument("--a11y", action="store_true", default=False, help="Do accessibilty checks and code")
     argp.add_argument("--responsive", action="store_true", default=False, help="Do responsive checks and code")
     args = argp.parse_args()
 
-    main(file=args.file, dir=args.dir, a11y=args.a11y, responsive=args.responsive, css=args.css)
+    main(file=args.file, dir=args.dir, a11y=args.a11y, responsive=args.responsive, css=args.css, model=args.model)
